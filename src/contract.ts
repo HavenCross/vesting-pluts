@@ -1,17 +1,26 @@
-import { Address, bool, compile, makeValidator, PaymentCredentials, pBool, pfn, Script, ScriptType, V2 } from "@harmoniclabs/plu-ts";
-import MyDatum from "./MyDatum";
-import MyRedeemer from "./MyRedeemer";
+import { Address, bool, bs, compile, data, int, lam, makeValidator, papp, PaymentCredentials, pBool, pfn, phoist, pif, pintToBS, plet, pmatch, precursive, PScriptContext, pStr, ptrace, ptraceIfFalse, punsafeConvertType, Script, ScriptType } from "@harmoniclabs/plu-ts";
+import VestingDatum from "./VestingDatum";
 
 export const contract = pfn([
-    MyDatum.type,
-    MyRedeemer.type,
-    V2.PScriptContext.type
+    VestingDatum.type,
+    data,
+    PScriptContext.type
 ],  bool)
-(( datum, redeemer, ctx ) =>
-    // always suceeds
-    pBool( true )
-);
+(( datum, _redeemer, ctx ) => {
 
+    // inlined
+    const signedByBeneficiary = ctx.tx.signatories.some( datum.beneficiary.eqTerm );
+
+    // inlined
+    const deadlineReached = 
+        pmatch( ctx.tx.interval.from.bound )
+        .onPFinite(({ _0: lowerInterval }) =>
+                datum.deadline.ltEq( lowerInterval ) 
+        )
+        ._( _ => pBool( false ) )
+
+    return signedByBeneficiary.and( deadlineReached );
+});
 
 ///////////////////////////////////////////////////////////////////
 // ------------------------------------------------------------- //
@@ -30,18 +39,12 @@ export const script = new Script(
 
 export const scriptMainnetAddr = new Address(
     "mainnet",
-    new PaymentCredentials(
-        "script",
-        script.hash
-    )
+    PaymentCredentials.script( script.hash )
 );
 
 export const scriptTestnetAddr = new Address(
     "testnet",
-    new PaymentCredentials(
-        "script",
-        script.hash.clone()
-    )
+    PaymentCredentials.script( script.hash )
 );
 
 export default contract;

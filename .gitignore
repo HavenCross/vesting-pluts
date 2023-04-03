@@ -1,3 +1,6 @@
+.cardanocli_pluts_tmp/
+testnet/
+
 # Logs
 logs
 *.log
