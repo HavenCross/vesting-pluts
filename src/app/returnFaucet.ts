@@ -17,15 +17,15 @@ async function returnFaucet()
         );
     }
 
-    const returnTADA = await cli.transaction.build({
+    let returnTADA = await cli.transaction.build({
         inputs: utxos as any,
         // the faucet address
         changeAddress: "addr_test1qqr585tvlc7ylnqvz8pyqwauzrdu0mxag3m7q56grgmgu7sxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknswgndm3"
     });
 
-    for(const prvtKey of prvtKeys)
+    for(const privateKey of prvtKeys)
     {
-        returnTADA.signWith( prvtKey )
+        returnTADA = await cli.transaction.sign({ tx: returnTADA, privateKey });
     }
 
     await cli.transaction.submit({ tx: returnTADA });

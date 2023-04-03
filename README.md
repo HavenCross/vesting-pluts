@@ -1,43 +1,76 @@
-# plu-ts-starter
+# vesting-pluts
 
-this repository contains an initial setup to write Cardano smart contracts using the [`plu-ts` library](https://github.com/HarmonicLabs/plu-ts);
+[`plu-ts`](https://github.com/HarmonicLabs/plu-ts) implementation of the "vesting" contract example;
 
-## Documentation
+## Contract
 
-[here you find documentation on how to use `plu-ts`](https://www.harmoniclabs.tech/plu-ts-docs/index.html)
+the contract succeeds if the following two conditions are met:
 
-feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plut-ts-docs)
+- the transaction is signed by the `PPubKeyHash` defined in the UTxO datum;
+- the transaction lower bound is `Finite` and greather than the datum `deadline` field
 
-# Build the project
+the contract source code can be found at [`src/contract.ts`](./src/contract.ts);
 
-The remository is initialized with a basic comand to compile the typescript code you write;
+## Using the contract
 
-in your shell, run:
-```
-npm run build
-```
+the repository includes a series of scripts to interact with the contract:
 
-this will generate a `dist` directoru that contains the compiled output.
+### compile
 
-# Run the code
+compiles the contract defined in [`src/contract.ts`](./src/contract.ts) and saves the result in a file caled `testnet/vesting.plutus.json` following the `cardano-cli` format.
 
-once you built the project (see above), run:
-```
-node dist/index.js
+run using
+```bash
+npm run vesting:compile
 ```
 
-# Run in demeter.run
+### setup (private testnet)
 
-demeter.run is a browser enviroment that allows you to set up environments of cardano applications in second
+> Alternatively you can use the `genKeys` script
 
-you can use demeter.run to set up your environment for a `plu-ts` project too!
+requires the `PRIVATE_TESTNET_PATH` environment variable.
 
-you are just one click away
+the `private-testnet` folder assumes a structure like the one of the [`woofpool/cardano-private-testnet-setup`](https://github.com/woofpool/cardano-private-testnet-setup)
 
-[![Code in Cardano Workspace](https://demeter.run/code/badge.svg)](https://demeter.run/code?repository=https://github.com/HarmonicLabs/plu-ts-starter&template=typescript)
+run using
+```bash
+npm run vesting:setup
+```
 
+### genKeys (testnet or mainnet)
 
+generates two pairs of keys and two addresses in the `./testnet` folder
 
-## Consultancy and audits
+run using
+```bash
+npm run vesting:genKeys
+```
 
-For smart contract consultancy and audits you can send a mail to [harmoniclabs@protonmail.com](mailto:harmoniclabs@protonmail.com)
+### create
+
+creates an utxo on the contract with the `testnet/payment2.vkey` credentials as beneficiary and a deadline setted to 10 seconds after the execution of the script
+
+run using
+```bash
+npm run vesting:create
+```
+
+### claim
+
+tries to spend the first utxo on the contract using `testnet/payment2.skey` as `requiredSigner`
+
+the transaction might fail if the deadline is not met
+
+run using
+```bash
+npm run vesting:claim
+```
+
+### returnFaucet (testnet)
+
+creates a trasaction using all `testnet/address1.addr` and `testnet/address2.addr` as input going to the testnet faucet.
+
+run using
+```bash
+npm run vesting:returnFaucet
+```
