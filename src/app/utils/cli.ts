@@ -4,6 +4,6 @@ import { config } from "dotenv";
 config()
 
 export const cli = new CardanoCliPluts({
-    network: "testnet 42",
-    socketPath: (process.env.PRIVATE_TESTNET_PATH ?? ".") + "/node-spo1/node.sock"
+    network: "testnet 1",
+    cardanoCliPath: "/home/admin/.local/bin/cardano-cli"
 });
