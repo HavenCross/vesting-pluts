@@ -1,23 +1,22 @@
 import { Address, DataI, PaymentCredentials } from "@harmoniclabs/plu-ts";
 import { cli } from "./utils/cli";
+import { koios } from "./utils/koios";
 
-async function claimVesting()
-{
+async function claimVesting() {
     const script = cli.utils.readScript("./testnet/vesting.plutus.json");
 
     const scriptAddr = new Address(
         "testnet",
-        PaymentCredentials.script( script.hash )
+        PaymentCredentials.script(script.hash)
     );
-    
+
     const privateKey = cli.utils.readPrivateKey("./testnet/payment2.skey");
     const addr = cli.utils.readAddress("./testnet/address2.addr");
 
     const utxos = await cli.query.utxo({ address: addr });
-    const scriptUtxos = await cli.query.utxo({ address: scriptAddr });
+    const scriptUtxos = await koios.address.utxos(scriptAddr);
 
-    if( utxos.length === 0 || scriptUtxos.length === 0 )
-    {
+    if (utxos.length === 0 || scriptUtxos.length === 0) {
         throw new Error(
             "no utxos found at address " + addr.toString()
         );
@@ -35,12 +34,12 @@ async function claimVesting()
                 inputScript: {
                     script: script,
                     datum: "inline",
-                    redeemer: new DataI( 0 )
+                    redeemer: new DataI(0)
                 }
             }
         ],
-        requiredSigners: [ pkh ], // required to be included in script context
-        collaterals: [ utxo ],
+        requiredSigners: [pkh], // required to be included in script context
+        collaterals: [utxo],
         changeAddress: addr,
         invalidBefore: cli.query.tipSync().slot
     });
@@ -50,7 +49,6 @@ async function claimVesting()
     await cli.transaction.submit({ tx: tx });
 }
 
-if( process.argv[1].includes("claimVesting") )
-{
+if (process.argv[1].includes("claimVesting")) {
     claimVesting();
 }
