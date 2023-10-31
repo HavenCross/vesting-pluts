@@ -1,4 +1,4 @@
-import { Address, DataI, PaymentCredentials } from "@harmoniclabs/plu-ts";
+import { Address, DataI, PaymentCredentials,UTxO,isData } from "@harmoniclabs/plu-ts";
 import { cli } from "./utils/cli";
 import { koios } from "./utils/koios";
 
@@ -14,7 +14,37 @@ async function claimVesting() {
     const addr = cli.utils.readAddress("./testnet/address2.addr");
 
     const utxos = await cli.query.utxo({ address: addr });
-    const scriptUtxos = await koios.address.utxos(scriptAddr);
+    // const scriptUtxos = await koios.address.utxos(scriptAddr);
+
+    const scriptUtxos = (await koios.address.utxos(scriptAddr))
+    .filter((utxo: UTxO) => {
+      const datum = utxo.resolved.datum;
+      const value = utxo.resolved.value.lovelaces;
+
+      if (
+        // datum is inline
+        isData(datum)
+      ) {
+        const pkh = datum.toJson();
+
+        // search if it corresponds to one of my public keys
+        const myPkhIdx = [addr].findIndex(
+          (addr: Address) => {
+            if (pkh.fields[0]) {
+              return pkh.fields[0].bytes.toString() == addr.paymentCreds.hash.toString()
+            }
+            return false;
+          }
+        );
+
+        // not a pkh of mine; not an utxo I can unstake
+        if (myPkhIdx < 0) return false;
+
+        return true;
+      }
+
+      return false;
+    });
 
     if (utxos.length === 0 || scriptUtxos.length === 0) {
         throw new Error(
